@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetVisSearch | Local Semantic Search & 3D Network</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Syne:wght@400..800&display=swap');
+
+        :root {
+            --bg-deep: #f8fafc;
+            --bg-mid: #f1f5f9;
+            --bg-surface: #ffffff;
+            --teal: #0d9488;
+            --teal-dim: #14b8a6;
+            --blue: #2563eb;
+            --white: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .display-font {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: var(--transition);
+            border-bottom: 1px solid transparent;
+        }
+
+        nav.scrolled {
+            background: rgba(248, 250, 252, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 1rem 5%;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            color: var(--teal);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .logo-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--teal);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--teal);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--teal);
+        }
+
+        .btn-gh {
+            padding: 0.5rem 1.25rem;
+            border: 1px solid var(--teal);
+            border-radius: 99px;
+            color: var(--teal);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-gh:hover {
+            background: rgba(15, 244, 192, 0.1);
+            box-shadow: 0 0 20px rgba(15, 244, 192, 0.2);
+        }
+
+        /* --- HERO SECTION --- */
+        #hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 5%;
+            overflow: hidden;
+        }
+
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--teal);
+            border-radius: 99px;
+            color: var(--teal);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2rem;
+            background: rgba(13, 148, 136, 0.05);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fade-up 0.8s forwards 0.3s;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fade-up 1s forwards 0.5s;
+        }
+
+        h1 span.typewriter {
+            color: var(--teal);
+            width: 5.5em;
+            text-align: left;
+            display: inline-block;
+            border-right: 2px solid var(--teal);
+            padding-right: 5px;
+            animation: blink 0.7s infinite;
+            vertical-align: bottom;
+        }
+
+        @keyframes blink {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: var(--teal); }
+        }
+
+        .hero-subtitle {
+            color: var(--muted);
+            font-size: 1.15rem;
+            max-width: 540px;
+            margin: 0 auto 3rem;
+            opacity: 0;
+            animation: fade-in 1s forwards 0.8s;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            opacity: 0;
+            animation: fade-up 1s forwards 1s;
+        }
+
+        .btn-primary {
+            background: var(--teal);
+            color: var(--bg-deep);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(13, 148, 136, 0.3);
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--border);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: var(--muted);
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            animation: pulse-opacity 2s infinite;
+            z-index: 2;
+        }
+
+        @keyframes pulse-opacity {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fade-up {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fade-in {
+            to { opacity: 1; }
+        }
+
+        /* --- HOW IT WORKS --- */
+        section {
+            padding: 8rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 1.1rem;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .step-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .step-card.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .step-card:hover {
+            border-color: var(--teal);
+            box-shadow: 0 10px 40px rgba(13, 148, 136, 0.1);
+        }
+
+        .step-num {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            font-size: 6rem;
+            font-weight: 900;
+            color: var(--teal);
+            opacity: 0.04;
+            pointer-events: none;
+            font-family: 'Syne', sans-serif;
+        }
+
+        .step-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--teal);
+        }
+
+        .step-card p {
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Icon Animations */
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pulse-anim { animation: pulse-svg 2s ease-in-out infinite; }
+        @keyframes pulse-svg {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* --- FEATURES --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .feature-card.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: #f1f5f9;
+        }
+
+        .feature-card.teal:hover { border-color: var(--teal); box-shadow: 0 0 30px rgba(13, 148, 136, 0.1); }
+        .feature-card.blue:hover { border-color: var(--blue); box-shadow: 0 0 30px rgba(26, 111, 255, 0.1); }
+
+        .feature-icon {
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- NETWORK VISUALIZATION --- */
+        .network-section {
+            width: 100%;
+            height: 400px;
+            background: var(--bg-deep);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .node-pulse {
+            animation: node-pulse 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes node-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .link-particle {
+            fill: var(--teal);
+            filter: drop-shadow(0 0 5px var(--teal));
+        }
+
+        /* --- TECH STACK --- */
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .pill {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .pill.reveal {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .pill:hover {
+            border-color: var(--teal);
+            transform: translateY(-3px);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .pill-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pill-name { font-weight: 700; font-size: 0.9rem; }
+        .pill-role { font-size: 0.75rem; color: var(--muted); }
+
+        /* --- PRIVACY SECTION --- */
+        .privacy-section {
+            text-align: center;
+            background: linear-gradient(to bottom, var(--bg-deep), #e2e8f0);
+        }
+
+        .shield-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 3rem;
+        }
+
+        .shield-svg {
+            position: relative;
+            z-index: 2;
+            color: var(--teal);
+            filter: drop-shadow(0 0 20px rgba(13, 148, 136, 0.4));
+        }
+
+        .radar-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid var(--teal);
+            border-radius: 50%;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            animation: radar 3s infinite;
+        }
+
+        @keyframes radar {
+            0% { width: 0; height: 0; opacity: 0.8; }
+            100% { width: 250px; height: 250px; opacity: 0; }
+        }
+
+        .privacy-chips {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .chip {
+            background: rgba(13, 148, 136, 0.05);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--teal-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            padding: 8rem 5%;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: #e2e8f0;
+        }
+
+        .footer-logo {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-subtitle {
+            color: var(--muted);
+            margin-bottom: 3rem;
+        }
+
+        .footer-meta {
+            margin-top: 4rem;
+            color: rgba(90, 122, 153, 0.4);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            h1 { font-size: 2.5rem; }
+            .hero-ctas { flex-direction: column; }
+            .privacy-chips { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="navbar">
+        <a href="#" class="logo">
+            <div class="logo-dot"></div>
+            NetVisSearch
+        </a>
+        <div class="nav-links">
+            <a href="#how-it-works">How it works</a>
+            <a href="#features">Features</a>
+            <a href="#tech-stack">Tech Stack</a>
+            <a href="https://github.com" class="btn-gh">GitHub</a>
+        </div>
+    </nav>
+
+    <section id="hero">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-content">
+            <div class="badge">🔒 100% Local & Private</div>
+            <h1>Search your files<br>by what they <span class="typewriter" id="typewriter"></span></h1>
+            <p class="hero-subtitle">
+                Upload images and documents. Search in plain English. NetVisSearch understands the content — not just the filename. And shows you how everything is connected.
+            </p>
+            <div class="hero-ctas">
+                <a href="/app.html" class="btn-primary">Get Started <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a>
+                <a href="#how-it-works" class="btn-secondary">Watch Demo</a>
+            </div>
+        </div>
+        <div class="scroll-hint">scroll to explore ↓</div>
+    </section>
+
+    <section id="how-it-works">
+        <div class="section-header">
+            <h2>From upload to insight in seconds</h2>
+            <p>Your data stays local. The intelligence is everywhere.</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card reveal-item">
+                <div class="step-num">01</div>
+                <div class="step-icon float-anim">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <h3>Upload Anything</h3>
+                <p>Drop in images, scanned PDFs, medical reports, or photos. EasyOCR reads the text even from messy scans, while Jina-CLIP-v2 understands visual context.</p>
+            </div>
+            <div class="step-card reveal-item">
+                <div class="step-num">02</div>
+                <div class="step-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10" class="pulse-anim"></path>
+                        <path d="M12 22a10 10 0 0 1-10-10"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <h3>AI Understands</h3>
+                <p>Every file is compressed into a 512-dimensional numeric fingerprint. Named entities (People, Places, Organizations) are extracted automatically using spaCy NLP.</p>
+            </div>
+            <div class="step-card reveal-item">
+                <div class="step-num">03</div>
+                <div class="step-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="5" r="3" class="pulse-anim"></circle>
+                        <circle cx="5" cy="19" r="3"></circle>
+                        <circle cx="19" cy="19" r="3"></circle>
+                        <line x1="8" y1="17" x2="10.5" y2="7.5"></line>
+                        <line x1="16" y1="17" x2="13.5" y2="7.5"></line>
+                        <line x1="16" y1="19" x2="8" y2="19"></line>
+                    </svg>
+                </div>
+                <h3>Explore the Network</h3>
+                <p>Search in plain English to see ranked results. A Three.js 3D force graph visualizes how your files relate through shared entities—uncovering connections you never knew existed.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="section-header">
+            <h2>Everything you need. Nothing you don't.</h2>
+            <p>Built for privacy-first power users.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card teal reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><path d="M11 7v8M7 11h8"></path></svg>
+                </div>
+                <h4>Natural Language Search</h4>
+                <p>Ask "show me photos from my trip" or "medical report from March". Matches meaning, not just keywords.</p>
+            </div>
+            <div class="feature-card blue reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </div>
+                <h4>Multimodal Understanding</h4>
+                <p>Encodes both visual images and OCR text into the same space. Your images and documents coexist intelligently.</p>
+            </div>
+            <div class="feature-card teal reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </div>
+                <h4>3D Entity Network</h4>
+                <p>Shared names, dates, and places link documents automatically. Navigate the graph to discover deeper insights.</p>
+            </div>
+            <div class="feature-card blue reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                </div>
+                <h4>DuckDB Vector Search</h4>
+                <p>HNSW index on FLOAT[512] columns. Full SQL joins + ANN search in one query. Faster than any standard vector DB.</p>
+            </div>
+            <div class="feature-card teal reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
+                <h4>Zero Cloud Dependency</h4>
+                <p>Every model runs locally. No API keys, no subscriptions, no data leaks. Your files never leave your drive.</p>
+            </div>
+            <div class="feature-card blue reveal-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+                <h4>Docker + AWS Ready</h4>
+                <p>Built cloud-ready. Deploy to AWS ECS or run on your home server with a single Docker command.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="network-section">
+        <div class="scanlines"></div>
+        <svg id="network-svg" width="100%" height="400" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice">
+            <!-- Defs for Glow -->
+            <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+
+            <!-- Links -->
+            <g id="svg-links"></g>
+            <!-- Nodes -->
+            <g id="svg-nodes"></g>
+        </svg>
+        <p style="color: var(--muted); font-size: 0.7rem; margin-top: 1rem; text-transform: uppercase; letter-spacing: 0.2em;">Every document. Every connection. Always local.</p>
+    </div>
+
+    <section id="tech-stack">
+        <div class="section-header">
+            <h2>Built on best-in-class open source</h2>
+        </div>
+        <div class="tech-pills">
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #10b981;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">Jina-CLIP-v2</span>
+                    <span class="pill-role">Multimodal Embeddings</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #3b82f6;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">DuckDB + VSS</span>
+                    <span class="pill-role">Vector Database</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #a855f7;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">FastAPI</span>
+                    <span class="pill-role">Backend API</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #f97316;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">EasyOCR</span>
+                    <span class="pill-role">Text Extraction</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #3b82f6;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">spaCy</span>
+                    <span class="pill-role">Entity Recognition</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #10b981;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">Three.js</span>
+                    <span class="pill-role">3D Visualization</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #e2e8f0;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">React + Vite</span>
+                    <span class="pill-role">Frontend</span>
+                </div>
+            </div>
+            <div class="pill reveal-item">
+                <div class="dot" style="background: #3b82f6;"></div>
+                <div class="pill-info">
+                    <span class="pill-name">Docker + AWS</span>
+                    <span class="pill-role">Deployment</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="privacy-section">
+        <div class="shield-container">
+            <div class="radar-ring"></div>
+            <div class="radar-ring" style="animation-delay: 1s;"></div>
+            <div class="radar-ring" style="animation-delay: 2s;"></div>
+            <svg class="shield-svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+        </div>
+        <h2>Your data never leaves your machine.</h2>
+        <p class="hero-subtitle">NetVisSearch runs every model locally — OCR, embeddings, entity extraction, and search. No data is sent to any server. No account needed. Just you and your files.</p>
+        <div class="privacy-chips">
+            <span class="chip">0 API CALLS</span>
+            <span class="chip">0 CLOUD UPLOADS</span>
+            <span class="chip">100% OFFLINE CAPABLE</span>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-logo display-font">NetVisSearch</div>
+        <p class="footer-subtitle">Set up in under 10 minutes. Runs on your laptop.</p>
+        <a href="https://github.com" class="btn-primary" style="display: inline-flex;">View on GitHub <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a>
+        <div class="footer-meta">
+            Open source · MIT License · No telemetry
+        </div>
+    </footer>
+
+    <script>
+        // --- NAV SCROLL EFFECT ---
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 60) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+
+        // --- PARTICLE FIELD ---
+        const canvas = document.getElementById('hero-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        window.addEventListener('resize', resizeCanvas);
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                else if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                else if (this.y < 0) this.y = canvas.height;
+
+                // Mouse Attractor
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 180) {
+                        this.x += dx * 0.01;
+                        this.y += dy * 0.01;
+                    }
+                }
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(13, 148, 136, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            for (let i = 0; i < 120; i++) {
+                particles.push(new Particle());
+            }
+        }
+        initParticles();
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 140) {
+                        ctx.strokeStyle = `rgba(13, 148, 136, ${0.1 * (1 - distance / 140)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- TYPEWRITER EFFECT ---
+        const words = ["mean.", "contain.", "show.", "remember.", "connect."];
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typewriterSpan = document.getElementById('typewriter');
+
+        function type() {
+            const currentWord = words[wordIndex];
+            if (isDeleting) {
+                typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 150;
+
+            if (!isDeleting && charIndex === currentWord.length) {
+                typeSpeed = 2000;
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                wordIndex = (wordIndex + 1) % words.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(type, typeSpeed);
+        }
+        type();
+
+        // --- SCROLL REVEAL ---
+        const observerOptions = {
+            threshold: 0.15
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-item, .step-card, .feature-card, .pill').forEach((el, index) => {
+            el.style.transitionDelay = `${(index % 3) * 0.15}s`;
+            revealObserver.observe(el);
+        });
+
+        // --- SVG NETWORK VIZ ---
+        const nodesData = [
+            { id: 1, x: 200, y: 100, label: "report_2024.pdf" },
+            { id: 2, x: 400, y: 150, label: "photo_paris.jpg" },
+            { id: 3, x: 150, y: 300, label: "invoice_q3.pdf" },
+            { id: 4, x: 600, y: 100, label: "notes_ai.txt" },
+            { id: 5, x: 800, y: 250, label: "medical_v1.pdf" },
+            { id: 6, x: 450, y: 320, label: "vacation_01.png" },
+            { id: 7, x: 700, y: 350, label: "client_log.csv" },
+            { id: 8, x: 500, y: 50, label: "sketch_final.png" }
+        ];
+
+        const linksData = [
+            [1, 2], [2, 4], [4, 5], [5, 7], [3, 6], [2, 6], [1, 8]
+        ];
+
+        const svgLinks = document.getElementById('svg-links');
+        const svgNodes = document.getElementById('svg-nodes');
+
+        linksData.forEach(([s, t]) => {
+            const sNode = nodesData.find(n => n.id === s);
+            const tNode = nodesData.find(n => n.id === t);
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const d = `M ${sNode.x} ${sNode.y} L ${tNode.x} ${tNode.y}`;
+            line.setAttribute("d", d);
+            line.setAttribute("stroke", "var(--border)");
+            line.setAttribute("stroke-width", "1");
+            svgLinks.appendChild(line);
+
+            // Animated particle on link
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("r", "2");
+            circle.setAttribute("class", "link-particle");
+            
+            const animateMotion = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
+            animateMotion.setAttribute("dur", `${Math.random() * 3 + 2}s`);
+            animateMotion.setAttribute("repeatCount", "indefinite");
+            animateMotion.setAttribute("path", d);
+            
+            circle.appendChild(animateMotion);
+            svgLinks.appendChild(circle);
+        });
+
+        nodesData.forEach((node, i) => {
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.setAttribute("class", "node-pulse");
+            g.style.animationDelay = `${i * 0.4}s`;
+
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", node.x);
+            circle.setAttribute("cy", node.y);
+            circle.setAttribute("r", "12");
+            circle.setAttribute("fill", "var(--bg-surface)");
+            circle.setAttribute("stroke", "var(--teal)");
+            circle.setAttribute("stroke-width", "2");
+            circle.setAttribute("filter", "url(#glow)");
+            
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("x", node.x);
+            text.setAttribute("y", node.y + 30);
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("fill", "var(--muted)");
+            text.setAttribute("font-size", "10");
+            text.setAttribute("class", "mono");
+            text.textContent = node.label;
+
+            g.appendChild(circle);
+            g.appendChild(text);
+            svgNodes.appendChild(g);
+        });
+    </script>
+</body>
+</html>

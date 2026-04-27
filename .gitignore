@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Data
+netvis.duckdb
+data/uploads/
+model_cache/
+
+# Build
+node_modules/
+dist/
+.DS_Store

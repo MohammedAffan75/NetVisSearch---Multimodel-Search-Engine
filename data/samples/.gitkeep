@@ -1,0 +1,2 @@
+# Drop sample images / PDFs here to test the ingestion pipeline locally.
+# These files ARE tracked by git (unlike data/uploads/).
