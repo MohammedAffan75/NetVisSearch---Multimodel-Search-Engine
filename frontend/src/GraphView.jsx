@@ -47,14 +47,14 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
       .backgroundColor('rgba(0,0,0,0)')
       .graphData(graphData)
       .nodeLabel(node => node.label)
-      .nodeColor(node => highlightedIds.has(node.id) ? '#1db87e' : '#4a5568')
+      .nodeColor(node => highlightedIds.has(node.id) ? '#0d9488' : '#94a3b8')
       .nodeOpacity(0.9)
-      .nodeResolution(16)
-      .nodeRelSize(6)
-      .linkColor(() => '#2d3748')
-      .linkWidth(link => (link.weight || 0.5) * 1.5)
+      .nodeResolution(24)
+      .nodeRelSize(7)
+      .linkColor(() => '#cbd5e1')
+      .linkWidth(link => (link.weight || 0.5) * 2)
       .linkLabel(link => link.label || '')
-      .linkOpacity(0.6)
+      .linkOpacity(0.4)
       .onNodeClick(node => {
         onNodeClick?.(node)
         
@@ -80,7 +80,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
   if (loading) {
     return (
-      <div className="h-[460px] flex flex-col items-center justify-center bg-gray-950 rounded-3xl border border-gray-800 text-slate-500">
+      <div className="h-[460px] flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400">
         <div className="animate-spin h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full mb-4"></div>
         <p className="text-sm font-medium animate-pulse">Initializing 3D Knowledge Network...</p>
       </div>
@@ -89,7 +89,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
   if (error) {
     return (
-      <div className="h-[460px] flex items-center justify-center bg-gray-950 rounded-3xl border border-gray-800 text-gray-500 text-sm">
+      <div className="h-[460px] flex items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400 text-sm">
         {error}
       </div>
     )
@@ -108,8 +108,8 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
   return (
     <div className="relative group">
       <div 
-        className="rounded-3xl border border-gray-800 overflow-hidden shadow-2xl"
-        style={{ background: '#0a0f1a' }}
+        className="rounded-3xl border border-slate-100 overflow-hidden shadow-sm"
+        style={{ background: '#f8fafc' }}
       >
         <div 
           ref={containerRef} 
@@ -119,13 +119,13 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
       
       {/* Legend / Info Overlay */}
       <div className="absolute top-4 left-4 pointer-events-none">
-        <div className="bg-gray-900/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl">
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 px-4 py-2 rounded-xl shadow-sm">
           <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
             <span>{graphData.nodes.length} NODES</span>
-            <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
+            <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
             <span>{graphData.links.length} EDGES</span>
-            <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
-            <span className="flex items-center gap-1.5 text-teal-400">
+            <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+            <span className="flex items-center gap-1.5 text-teal-600">
               <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
               SEARCH RESULTS
             </span>
@@ -134,7 +134,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
       </div>
 
       <div className="absolute bottom-4 right-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="text-[9px] text-slate-500 font-bold bg-gray-900/50 px-2 py-1 rounded">
+        <div className="text-[9px] text-slate-400 font-bold bg-white/50 backdrop-blur-sm px-2 py-1 rounded">
           DRAG TO ROTATE · SCROLL TO ZOOM · CLICK NODE TO FOCUS
         </div>
       </div>

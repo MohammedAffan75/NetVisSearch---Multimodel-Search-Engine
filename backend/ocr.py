@@ -4,15 +4,15 @@ import io
 import tempfile
 from pathlib import Path
 import fitz  # PyMuPDF
-import easyocr
 from backend import config
 
 _reader = None
 
-def get_reader() -> easyocr.Reader:
+def get_reader():
     """
     Lazy singleton for the EasyOCR reader.
     """
+    import easyocr
     global _reader
     if _reader is None:
         # Initialize with English, CPU mode, and custom model cache dir

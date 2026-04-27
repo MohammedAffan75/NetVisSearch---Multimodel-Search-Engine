@@ -1,7 +1,5 @@
-import torch
 import numpy as np
 from PIL import Image
-from transformers import AutoModel, AutoProcessor
 from backend import config
 import os
 
@@ -13,6 +11,9 @@ def _load():
     """
     Lazy load the Jina-CLIP-v2 model and processor once.
     """
+    import torch
+    from transformers import AutoModel, AutoProcessor
+    
     global _model, _processor
     if _model is None:
         print(f"[embed] Loading {config.EMBEDDING_MODEL}...")
@@ -49,6 +50,7 @@ def embed_text(text: str) -> list[float]:
         return [0.0] * config.EMBEDDING_DIM
     
     model, processor = _load()
+    import torch
     inputs = processor(
         text=[text], 
         return_tensors="pt", 
@@ -72,6 +74,7 @@ def embed_image(image_path: str) -> list[float]:
     """
     import fitz  # PyMuPDF
     import io
+    import torch
 
     model, processor = _load()
     
