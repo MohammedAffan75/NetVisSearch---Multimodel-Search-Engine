@@ -119,7 +119,3 @@ NetVisSearch was built with the belief that your personal data shouldn't be the 
 - No telemetry.
 - No external API calls for processing.
 - All AI models run locally on your CPU/GPU.
-
-## 📄 License
-
-MIT License - Copyright (c) 2024
