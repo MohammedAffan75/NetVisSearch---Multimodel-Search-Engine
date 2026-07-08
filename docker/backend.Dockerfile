@@ -70,7 +70,7 @@ USER netvis
 
 # Health check — ECS / Docker Compose can use this
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
 # Entrypoint: Uvicorn with reload in dev, 4 workers in prod
 CMD ["sh", "-c", \

@@ -41,9 +41,10 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
       }
     }
 
+    const currentHeight = window.innerWidth < 768 ? 320 : 460;
     const Graph = ForceGraph3D()(containerRef.current)
       .width(containerRef.current.clientWidth)
-      .height(460)
+      .height(currentHeight)
       .backgroundColor('rgba(0,0,0,0)')
       .graphData(graphData)
       .nodeLabel(node => node.label)
@@ -70,8 +71,24 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
     graphRef.current = Graph
 
+    // Resize handling using ResizeObserver
+    const handleResize = () => {
+      if (containerRef.current && graphRef.current) {
+        const width = containerRef.current.clientWidth;
+        const height = window.innerWidth < 768 ? 320 : 460;
+        graphRef.current.width(width);
+        graphRef.current.height(height);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(containerRef.current);
+
     // Cleanup function
     return () => {
+      resizeObserver.disconnect();
       if (graphRef.current && typeof graphRef.current._destructor === 'function') {
         graphRef.current._destructor()
       }
@@ -80,7 +97,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
   if (loading) {
     return (
-      <div className="h-[460px] flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400">
+      <div className="h-[320px] md:h-[460px] flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400">
         <div className="animate-spin h-8 w-8 border-4 border-teal-500 border-t-transparent rounded-full mb-4"></div>
         <p className="text-sm font-medium animate-pulse">Initializing 3D Knowledge Network...</p>
       </div>
@@ -89,7 +106,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
   if (error) {
     return (
-      <div className="h-[460px] flex items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400 text-sm">
+      <div className="h-[320px] md:h-[460px] flex items-center justify-center bg-white rounded-3xl border border-slate-100 text-slate-400 text-sm">
         {error}
       </div>
     )
@@ -97,7 +114,7 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
 
   if (graphData.nodes.length === 0) {
     return (
-      <div className="h-[460px] flex flex-col items-center justify-center bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
+      <div className="h-[320px] md:h-[460px] flex flex-col items-center justify-center bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
         <svg className="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.823a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.101" /></svg>
         <p className="font-bold">Entity Network Empty</p>
         <p className="text-xs">Upload documents to visualize semantic connections</p>
@@ -113,14 +130,14 @@ const GraphView = ({ searchResults = [], onNodeClick }) => {
       >
         <div 
           ref={containerRef} 
-          className="w-full h-[460px]"
+          className="w-full h-[320px] md:h-[460px]"
         />
       </div>
       
       {/* Legend / Info Overlay */}
       <div className="absolute top-4 left-4 pointer-events-none">
-        <div className="bg-white/80 backdrop-blur-md border border-slate-100 px-4 py-2 rounded-xl shadow-sm">
-          <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
             <span>{graphData.nodes.length} NODES</span>
             <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
             <span>{graphData.links.length} EDGES</span>

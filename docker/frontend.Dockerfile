@@ -18,6 +18,9 @@
 # ── Stage 1: build ────────────────────────────────────────────────────────────
 FROM node:20-slim AS builder
 
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /app
 
 # Copy package manifests first for cached installs
@@ -50,7 +53,7 @@ RUN printf 'server {\n\
 \n\
     # Proxy API calls to the backend service\n\
     location /api/ {\n\
-        proxy_pass http://backend:8000;\n\
+        proxy_pass http://backend:8000/;\n\
         proxy_set_header Host $host;\n\
         proxy_set_header X-Real-IP $remote_addr;\n\
     }\n\
